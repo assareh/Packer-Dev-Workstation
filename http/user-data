@@ -1,0 +1,29 @@
+#cloud-config
+autoinstall:
+  version: 1
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  network:
+    network:
+      version: 2
+      ethernets:
+        ens33:
+          dhcp4: true
+  storage:
+    layout:
+      name: direct
+  identity:
+    hostname: dev-vm
+    username: developer
+    password: "$6$rounds=4096$saltsaltsal$YhDzQHRHWHT6M.r7TwHLQW9aMF8E1K7W9QfKhZmxHXN2Y3P3Q0E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2"  # password: developer
+  ssh:
+    install-server: true
+    allow-pw: true
+  packages:
+    - openssh-server
+    - cloud-init
+    - open-vm-tools
+  late-commands:
+    - echo 'developer ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/developer
+    - chmod 440 /target/etc/sudoers.d/developer

@@ -1,0 +1,30 @@
+# Packer build artifacts
+output-*/
+*.box
+*.ova
+*.ovf
+*.vmdk
+*.vmx
+*.vmxf
+*.vmsd
+packer_cache/
+crash.log
+
+# Packer variables with sensitive data
+variables.pkrvars.hcl
+*.auto.pkrvars.hcl
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.log
+*.tmp
