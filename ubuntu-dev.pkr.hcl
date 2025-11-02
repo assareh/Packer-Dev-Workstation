@@ -116,6 +116,12 @@ build {
     ]
   }
 
+  # Upload tmux configuration
+  provisioner "file" {
+    source      = "config/.tmux.conf"
+    destination = "/tmp/tmux.conf"
+  }
+
   # Run main provisioning script
   provisioner "shell" {
     script = "scripts/provision.sh"

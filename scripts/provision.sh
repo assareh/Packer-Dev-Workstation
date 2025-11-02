@@ -18,7 +18,8 @@ sudo apt-get install -y \
     ca-certificates \
     gnupg \
     lsb-release \
-    htop
+    htop \
+    tmux
 
 # Install Python and pip
 echo "===> Installing Python and pip..."
@@ -71,6 +72,11 @@ sudo systemctl restart ssh
 echo "===> Creating workspace directory..."
 mkdir -p /home/developer/workspace
 chown developer:developer /home/developer/workspace
+
+# Copy tmux configuration
+echo "===> Configuring tmux..."
+sudo cp /tmp/tmux.conf /home/developer/.tmux.conf
+sudo chown developer:developer /home/developer/.tmux.conf
 
 # Set timezone to UTC
 echo "===> Setting timezone to UTC..."
