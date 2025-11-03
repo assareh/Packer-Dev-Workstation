@@ -16,7 +16,7 @@ autoinstall:
   identity:
     hostname: dev-vm
     username: developer
-    password: "$6$rounds=4096$saltsaltsal$YhDzQHRHWHT6M.r7TwHLQW9aMF8E1K7W9QfKhZmxHXN2Y3P3Q0E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2"  # password: developer
+    password: "$6$saltsalt$qXPYu4OOtMnG7Fg3kmsG54ifjWDzDJTw3QJ0msPiwek49JLRiA6xsjEn4naOGwTD55NZ3wtjZa6btI5oARaHP/"  # password: developer
   ssh:
     install-server: true
     allow-pw: true

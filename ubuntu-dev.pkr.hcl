@@ -81,11 +81,14 @@ source "vmware-iso" "ubuntu" {
 
   shutdown_command = "echo '${var.ssh_password}' | sudo -S shutdown -P now"
 
+  # Network adapter type - let Packer handle connection type
   vmx_data = {
     "ethernet0.virtualdev" = "vmxnet3"
     "ethernet0.present"    = "TRUE"
-    "ethernet0.connectionType" = "nat"
   }
+
+  # Use NAT networking (VM gets its own IP, not shared with host)
+  network = "nat"
 
   # Export as OVA
   format = "ova"
