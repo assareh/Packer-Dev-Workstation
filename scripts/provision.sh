@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Prevent debconf warnings about non-interactive frontend
+export DEBIAN_FRONTEND=noninteractive
+
 echo "===> Starting provisioning..."
 
 # Update package lists
@@ -35,7 +38,7 @@ sudo update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
 # Install Claude Code CLI
 echo "===> Installing Claude Code CLI..."
-curl -fsSL https://claude.ai/install.sh | sh
+curl -fsSL https://claude.ai/install.sh | bash
 
 # Verify installations
 echo "===> Verifying installations..."
@@ -45,14 +48,14 @@ pip --version
 
 # Configure Git with sensible defaults
 echo "===> Configuring Git..."
-git config --system init.defaultBranch main
-git config --system pull.rebase false
-git config --system credential.helper store
+sudo git config --system init.defaultBranch main
+sudo git config --system pull.rebase false
+sudo git config --system credential.helper store
 
 # Install common Python development tools
 echo "===> Installing Python development tools..."
-pip install --upgrade pip
-pip install \
+pip install --break-system-packages --upgrade pip
+pip install --break-system-packages \
     virtualenv \
     pylint \
     black \

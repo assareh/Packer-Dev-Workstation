@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Prevent debconf warnings about non-interactive frontend
+export DEBIAN_FRONTEND=noninteractive
+
 echo "===> Starting cleanup..."
 
 # Remove unnecessary packages
@@ -27,7 +30,7 @@ sudo find /var/log -type f -name "*.1" -delete
 echo "===> Clearing command history..."
 history -c
 cat /dev/null > ~/.bash_history
-sudo cat /dev/null > /root/.bash_history
+sudo truncate -s 0 /root/.bash_history
 
 # Clear SSH keys (will be regenerated on first boot)
 echo "===> Clearing SSH host keys..."

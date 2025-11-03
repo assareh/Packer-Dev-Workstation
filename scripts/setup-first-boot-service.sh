@@ -6,11 +6,11 @@ set -e
 echo "===> Setting up first-boot service..."
 
 # Copy the first-boot script to system location
-cp /tmp/first-boot-setup.sh /usr/local/bin/first-boot-setup.sh
-chmod +x /usr/local/bin/first-boot-setup.sh
+sudo cp /tmp/first-boot-setup.sh /usr/local/bin/first-boot-setup.sh
+sudo chmod +x /usr/local/bin/first-boot-setup.sh
 
 # Create systemd service
-cat > /etc/systemd/system/first-boot-setup.service << 'EOF'
+sudo bash -c 'cat > /etc/systemd/system/first-boot-setup.service << '\''EOF'\''
 [Unit]
 Description=First Boot Setup - Generate SSH keys and configure Git
 After=network-online.target
@@ -27,8 +27,9 @@ StandardError=journal
 [Install]
 WantedBy=multi-user.target
 EOF
+'
 
 # Enable the service
-systemctl enable first-boot-setup.service
+sudo systemctl enable first-boot-setup.service
 
 echo "===> First-boot service configured!"

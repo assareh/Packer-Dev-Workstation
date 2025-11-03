@@ -8,7 +8,9 @@ autoinstall:
     network:
       version: 2
       ethernets:
-        ens33:
+        any:
+          match:
+            name: en*
           dhcp4: true
   storage:
     layout:
@@ -27,3 +29,5 @@ autoinstall:
   late-commands:
     - echo 'developer ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/developer
     - chmod 440 /target/etc/sudoers.d/developer
+    - curtin in-target --target=/target -- systemctl enable ssh
+    - curtin in-target --target=/target -- systemctl start ssh

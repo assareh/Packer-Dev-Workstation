@@ -58,6 +58,7 @@ source "vmware-iso" "ubuntu" {
   ssh_username = var.ssh_username
   ssh_password = var.ssh_password
   ssh_timeout  = "30m"
+  ssh_handshake_attempts = 100
 
   cpus      = var.cpus
   memory    = var.memory
@@ -106,6 +107,9 @@ build {
 
   # Update system
   provisioner "shell" {
+    environment_vars = [
+      "DEBIAN_FRONTEND=noninteractive"
+    ]
     inline = [
       "sudo apt-get update",
       "sudo apt-get upgrade -y"
@@ -114,6 +118,9 @@ build {
 
   # Install VMware Tools dependencies
   provisioner "shell" {
+    environment_vars = [
+      "DEBIAN_FRONTEND=noninteractive"
+    ]
     inline = [
       "sudo apt-get install -y open-vm-tools"
     ]
