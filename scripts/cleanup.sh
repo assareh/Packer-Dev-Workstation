@@ -32,6 +32,42 @@ history -c
 cat /dev/null > ~/.bash_history
 sudo truncate -s 0 /root/.bash_history
 
+# Harden SSH - disable password authentication
+echo "===> Hardening SSH configuration..."
+# Remove all existing conflicting settings
+sudo sed -i '/^#*PermitRootLogin/d' /etc/ssh/sshd_config
+sudo sed -i '/^#*PasswordAuthentication/d' /etc/ssh/sshd_config
+sudo sed -i '/^#*ChallengeResponseAuthentication/d' /etc/ssh/sshd_config
+sudo sed -i '/^#*KbdInteractiveAuthentication/d' /etc/ssh/sshd_config
+sudo sed -i '/^#*PubkeyAuthentication/d' /etc/ssh/sshd_config
+sudo sed -i '/^#*AuthenticationMethods/d' /etc/ssh/sshd_config
+
+# Add explicit settings at the end of the config
+cat << 'SSHEOF' | sudo tee -a /etc/ssh/sshd_config
+
+# Custom security settings - disable password authentication
+PermitRootLogin no
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AuthenticationMethods publickey
+SSHEOF
+
+# Disable PAM password authentication for SSH
+echo "===> Disabling PAM password authentication..."
+sudo sed -i 's/@include common-auth/#@include common-auth/' /etc/pam.d/sshd
+
+# Disable ssh.socket to prevent socket activation config issues
+sudo systemctl stop ssh.socket 2>/dev/null || true
+sudo systemctl disable ssh.socket 2>/dev/null || true
+
+# Validate SSH config
+echo "===> Validating SSH configuration..."
+sudo sshd -t
+
+# Note: Not restarting SSH here - will be regenerated on first boot with new host keys
+
 # Clear SSH keys (will be regenerated on first boot)
 echo "===> Clearing SSH host keys..."
 sudo rm -f /etc/ssh/ssh_host_*

@@ -64,52 +64,19 @@ pip install --break-system-packages \
 
 # Configure SSH for better security
 echo "===> Configuring SSH..."
-# Add SSH public key to authorized_keys
-echo "===> Adding SSH public key to authorized_keys..."
-mkdir -p /home/developer/.ssh
-chmod 700 /home/developer/.ssh
-echo "$SSH_PUBLIC_KEY" > /home/developer/.ssh/authorized_keys
-chmod 600 /home/developer/.ssh/authorized_keys
-chown -R developer:developer /home/developer/.ssh
+# Add SSH public key to authorized_keys if provided
+if [ -n "$SSH_PUBLIC_KEY" ]; then
+    echo "===> Adding SSH public key to authorized_keys..."
+    mkdir -p /home/developer/.ssh
+    chmod 700 /home/developer/.ssh
+    echo "$SSH_PUBLIC_KEY" > /home/developer/.ssh/authorized_keys
+    chmod 600 /home/developer/.ssh/authorized_keys
+    chown -R developer:developer /home/developer/.ssh
+fi
 
-# Disable password authentication and root login
-echo "===> Disabling password authentication..."
-# Remove all existing conflicting settings
-sudo sed -i '/^#*PermitRootLogin/d' /etc/ssh/sshd_config
-sudo sed -i '/^#*PasswordAuthentication/d' /etc/ssh/sshd_config
-sudo sed -i '/^#*ChallengeResponseAuthentication/d' /etc/ssh/sshd_config
-sudo sed -i '/^#*KbdInteractiveAuthentication/d' /etc/ssh/sshd_config
-sudo sed -i '/^#*PubkeyAuthentication/d' /etc/ssh/sshd_config
-
-# Add explicit settings at the end of the config
-cat << 'SSHEOF' | sudo tee -a /etc/ssh/sshd_config
-
-# Custom security settings - disable password authentication
-PermitRootLogin no
-PasswordAuthentication no
-ChallengeResponseAuthentication no
-KbdInteractiveAuthentication no
-PubkeyAuthentication yes
-AuthenticationMethods publickey
-SSHEOF
-
-# Disable PAM password authentication for SSH
-echo "===> Configuring PAM to disable password auth for SSH..."
-sudo sed -i 's/@include common-auth/#@include common-auth/' /etc/pam.d/sshd
-
-# Validate SSH config
-echo "===> Validating SSH configuration..."
-sudo sshd -t
-
-# Restart SSH service (not using systemctl restart to avoid socket activation issues)
-echo "===> Restarting SSH service..."
-sudo systemctl stop ssh.socket 2>/dev/null || true
-sudo systemctl disable ssh.socket 2>/dev/null || true
-sudo systemctl enable ssh
+# Keep password authentication enabled during build - will be disabled in cleanup
+sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
 sudo systemctl restart ssh
-
-# Verify SSH is running
-sudo systemctl status ssh --no-pager
 
 # Create workspace directory
 echo "===> Creating workspace directory..."
