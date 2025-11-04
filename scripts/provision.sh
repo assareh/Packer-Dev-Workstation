@@ -64,8 +64,18 @@ pip install --break-system-packages \
 
 # Configure SSH for better security
 echo "===> Configuring SSH..."
+# Add SSH public key to authorized_keys
+echo "===> Adding SSH public key to authorized_keys..."
+mkdir -p /home/developer/.ssh
+chmod 700 /home/developer/.ssh
+echo "$SSH_PUBLIC_KEY" > /home/developer/.ssh/authorized_keys
+chmod 600 /home/developer/.ssh/authorized_keys
+chown -R developer:developer /home/developer/.ssh
+
+# Disable password authentication and root login
 sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
-sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
 
 # Enable and start SSH
 sudo systemctl enable ssh

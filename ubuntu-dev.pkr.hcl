@@ -48,6 +48,12 @@ variable "iso_checksum" {
   default = "sha256:c3514bf0056180d09376462a7a1b4f213c1d6e8ea67fae5c25099c6fd3d8274b"
 }
 
+variable "ssh_public_key" {
+  type        = string
+  description = "SSH public key to add to authorized_keys"
+  default     = ""
+}
+
 source "vmware-iso" "ubuntu" {
   vm_name       = var.vm_name
   guest_os_type = "ubuntu-64"
@@ -134,6 +140,9 @@ build {
 
   # Run main provisioning script
   provisioner "shell" {
+    environment_vars = [
+      "SSH_PUBLIC_KEY=${var.ssh_public_key}"
+    ]
     script = "scripts/provision.sh"
   }
 
