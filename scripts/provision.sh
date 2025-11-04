@@ -74,24 +74,37 @@ chown -R developer:developer /home/developer/.ssh
 
 # Disable password authentication and root login
 echo "===> Disabling password authentication..."
-sudo sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-sudo sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-sudo sed -i 's/^#*ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
-sudo sed -i 's/^#*KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
-sudo sed -i 's/^#*UsePAM.*/UsePAM no/' /etc/ssh/sshd_config
+# Remove all existing conflicting settings
+sudo sed -i '/^#*PermitRootLogin/d' /etc/ssh/sshd_config
+sudo sed -i '/^#*PasswordAuthentication/d' /etc/ssh/sshd_config
+sudo sed -i '/^#*ChallengeResponseAuthentication/d' /etc/ssh/sshd_config
+sudo sed -i '/^#*KbdInteractiveAuthentication/d' /etc/ssh/sshd_config
+sudo sed -i '/^#*PubkeyAuthentication/d' /etc/ssh/sshd_config
 
-# Add explicit settings if they don't exist
-grep -q "^PermitRootLogin" /etc/ssh/sshd_config || echo "PermitRootLogin no" | sudo tee -a /etc/ssh/sshd_config
-grep -q "^PasswordAuthentication" /etc/ssh/sshd_config || echo "PasswordAuthentication no" | sudo tee -a /etc/ssh/sshd_config
-grep -q "^ChallengeResponseAuthentication" /etc/ssh/sshd_config || echo "ChallengeResponseAuthentication no" | sudo tee -a /etc/ssh/sshd_config
-grep -q "^KbdInteractiveAuthentication" /etc/ssh/sshd_config || echo "KbdInteractiveAuthentication no" | sudo tee -a /etc/ssh/sshd_config
-grep -q "^UsePAM" /etc/ssh/sshd_config || echo "UsePAM no" | sudo tee -a /etc/ssh/sshd_config
+# Add explicit settings at the end of the config
+cat << 'SSHEOF' | sudo tee -a /etc/ssh/sshd_config
+
+# Custom security settings - disable password authentication
+PermitRootLogin no
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AuthenticationMethods publickey
+SSHEOF
+
+# Disable PAM password authentication for SSH
+echo "===> Configuring PAM to disable password auth for SSH..."
+sudo sed -i 's/@include common-auth/#@include common-auth/' /etc/pam.d/sshd
 
 # Validate SSH config
 echo "===> Validating SSH configuration..."
 sudo sshd -t
 
-# Enable and restart SSH
+# Restart SSH service (not using systemctl restart to avoid socket activation issues)
+echo "===> Restarting SSH service..."
+sudo systemctl stop ssh.socket 2>/dev/null || true
+sudo systemctl disable ssh.socket 2>/dev/null || true
 sudo systemctl enable ssh
 sudo systemctl restart ssh
 
