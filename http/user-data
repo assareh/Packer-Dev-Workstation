@@ -30,4 +30,5 @@ autoinstall:
     - echo 'developer ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/developer
     - chmod 440 /target/etc/sudoers.d/developer
     - curtin in-target --target=/target -- systemctl enable ssh
-    - curtin in-target --target=/target -- systemctl start ssh
+    - curtin in-target --target=/target -- systemctl disable ssh.socket
+  shutdown: reboot

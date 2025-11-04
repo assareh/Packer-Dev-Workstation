@@ -66,6 +66,9 @@ source "vmware-iso" "ubuntu" {
   ssh_timeout  = "30m"
   ssh_handshake_attempts = 100
 
+  # Enable SSH debugging
+  ssh_pty = true
+
   cpus      = var.cpus
   memory    = var.memory
   disk_size = var.disk_size
