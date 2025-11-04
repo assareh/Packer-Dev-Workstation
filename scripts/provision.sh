@@ -73,13 +73,30 @@ chmod 600 /home/developer/.ssh/authorized_keys
 chown -R developer:developer /home/developer/.ssh
 
 # Disable password authentication and root login
-sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
-sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-sudo sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+echo "===> Disabling password authentication..."
+sudo sed -i 's/^#*PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+sudo sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo sed -i 's/^#*ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+sudo sed -i 's/^#*KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+sudo sed -i 's/^#*UsePAM.*/UsePAM no/' /etc/ssh/sshd_config
 
-# Enable and start SSH
+# Add explicit settings if they don't exist
+grep -q "^PermitRootLogin" /etc/ssh/sshd_config || echo "PermitRootLogin no" | sudo tee -a /etc/ssh/sshd_config
+grep -q "^PasswordAuthentication" /etc/ssh/sshd_config || echo "PasswordAuthentication no" | sudo tee -a /etc/ssh/sshd_config
+grep -q "^ChallengeResponseAuthentication" /etc/ssh/sshd_config || echo "ChallengeResponseAuthentication no" | sudo tee -a /etc/ssh/sshd_config
+grep -q "^KbdInteractiveAuthentication" /etc/ssh/sshd_config || echo "KbdInteractiveAuthentication no" | sudo tee -a /etc/ssh/sshd_config
+grep -q "^UsePAM" /etc/ssh/sshd_config || echo "UsePAM no" | sudo tee -a /etc/ssh/sshd_config
+
+# Validate SSH config
+echo "===> Validating SSH configuration..."
+sudo sshd -t
+
+# Enable and restart SSH
 sudo systemctl enable ssh
 sudo systemctl restart ssh
+
+# Verify SSH is running
+sudo systemctl status ssh --no-pager
 
 # Create workspace directory
 echo "===> Creating workspace directory..."
