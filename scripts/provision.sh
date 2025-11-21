@@ -36,6 +36,11 @@ sudo apt-get install -y \
 sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 sudo update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
+# Install Node.js and npm
+echo "===> Installing Node.js and npm..."
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
 # Install GitHub CLI
 echo "===> Installing GitHub CLI..."
 sudo mkdir -p -m 755 /etc/apt/keyrings
@@ -49,11 +54,21 @@ sudo apt-get install -y gh
 echo "===> Installing Claude Code CLI..."
 curl -fsSL https://claude.ai/install.sh | bash
 
+# Install OpenAI Codex CLI
+echo "===> Installing OpenAI Codex CLI..."
+sudo npm install -g @openai/codex
+
+# Install Gemini CLI
+echo "===> Installing Gemini CLI..."
+sudo npm install -g google/gemini-cli
+
 # Verify installations
 echo "===> Verifying installations..."
 git --version
 python --version
 pip --version
+node --version
+npm --version
 gh --version
 
 # Configure Git with sensible defaults
