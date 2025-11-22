@@ -22,7 +22,8 @@ sudo apt-get install -y \
     gnupg \
     lsb-release \
     htop \
-    tmux
+    tmux \
+    zsh
 
 # Install Python and pip
 echo "===> Installing Python and pip..."
@@ -112,6 +113,36 @@ chown developer:developer /home/developer/workspace
 echo "===> Configuring tmux..."
 sudo cp /tmp/tmux.conf /home/developer/.tmux.conf
 sudo chown developer:developer /home/developer/.tmux.conf
+
+# Configure zsh and autosuggestions
+echo "===> Configuring zsh with autosuggestions..."
+sudo apt-get install -y zsh-autosuggestions
+
+# Set zsh as default shell for developer user
+sudo chsh -s $(which zsh) developer
+
+# Create .zshrc with autosuggestions enabled
+cat > /home/developer/.zshrc << 'ZSHRC_EOF'
+# Enable autosuggestions
+source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+# History configuration
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
+setopt SHARE_HISTORY
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+
+# Basic prompt
+PROMPT='%F{green}%n@%m%f:%F{blue}%~%f%# '
+
+# Enable command completion
+autoload -Uz compinit
+compinit
+ZSHRC_EOF
+
+sudo chown developer:developer /home/developer/.zshrc
 
 # Set timezone to UTC
 echo "===> Setting timezone to UTC..."
