@@ -16,6 +16,7 @@ sudo apt-get install -y \
     git \
     curl \
     wget \
+    unzip \
     build-essential \
     software-properties-common \
     ca-certificates \
@@ -63,6 +64,24 @@ sudo npm install -g @openai/codex
 echo "===> Installing Gemini CLI..."
 sudo npm install -g google/gemini-cli
 
+# Install AWS CLI v2
+echo "===> Installing AWS CLI..."
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+unzip -q /tmp/awscliv2.zip -d /tmp
+sudo /tmp/aws/install
+rm -rf /tmp/awscliv2.zip /tmp/aws
+
+# Install Azure CLI
+echo "===> Installing Azure CLI..."
+curl -fsSL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+# Install Google Cloud SDK
+echo "===> Installing Google Cloud SDK..."
+curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list > /dev/null
+sudo apt-get update
+sudo apt-get install -y google-cloud-cli
+
 # Verify installations
 echo "===> Verifying installations..."
 git --version
@@ -71,6 +90,9 @@ pip --version
 node --version
 npm --version
 gh --version
+aws --version
+az version --output table
+gcloud version
 
 # Configure Git with sensible defaults
 echo "===> Configuring Git..."
