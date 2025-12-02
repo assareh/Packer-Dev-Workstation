@@ -136,17 +136,18 @@ echo "===> Configuring tmux..."
 sudo cp /tmp/tmux.conf /home/developer/.tmux.conf
 sudo chown developer:developer /home/developer/.tmux.conf
 
-# Configure zsh and autosuggestions
-echo "===> Configuring zsh with autosuggestions..."
-sudo apt-get install -y zsh-autosuggestions
+# Configure zsh with autosuggestions and syntax highlighting
+echo "===> Configuring zsh with plugins..."
+sudo apt-get install -y zsh-autosuggestions zsh-syntax-highlighting
 
 # Set zsh as default shell for developer user
 sudo chsh -s $(which zsh) developer
 
-# Create .zshrc with autosuggestions enabled
+# Create .zshrc with full configuration
 cat > /home/developer/.zshrc << 'ZSHRC_EOF'
-# Enable autosuggestions
+# Enable plugins
 source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # History configuration
 HISTFILE=~/.zsh_history
@@ -155,13 +156,26 @@ SAVEHIST=10000
 setopt SHARE_HISTORY
 setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
+setopt HIST_FIND_NO_DUPS
 
-# Basic prompt
-PROMPT='%F{green}%n@%m%f:%F{blue}%~%f%# '
-
-# Enable command completion
+# Enable command completion with menu selection
 autoload -Uz compinit
 compinit
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+
+# Custom prompt similar to Pure/Starship style
+PROMPT='# %F{magenta}%n%f at %F{yellow}%m%f in %F{blue}%~%f [%F{green}%*%f]
+→ '
+
+# Key bindings for history search
+bindkey '^[[A' history-search-backward
+bindkey '^[[B' history-search-forward
+
+# Useful aliases
+alias ll='ls -la'
+alias la='ls -A'
+alias l='ls -CF'
 ZSHRC_EOF
 
 sudo chown developer:developer /home/developer/.zshrc
