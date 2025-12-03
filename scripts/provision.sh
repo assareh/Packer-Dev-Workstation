@@ -82,6 +82,13 @@ echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.clou
 sudo apt-get update
 sudo apt-get install -y google-cloud-cli
 
+# Install Terraform CLI
+echo "===> Installing Terraform CLI..."
+wget -qO- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list > /dev/null
+sudo apt-get update
+sudo apt-get install -y terraform
+
 # Verify installations
 echo "===> Verifying installations..."
 git --version
@@ -93,6 +100,7 @@ gh --version
 aws --version
 az version --output table
 gcloud version
+terraform version
 
 # Configure Git with sensible defaults
 echo "===> Configuring Git..."
