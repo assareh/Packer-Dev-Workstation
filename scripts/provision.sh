@@ -24,7 +24,8 @@ sudo apt-get install -y \
     lsb-release \
     htop \
     tmux \
-    zsh
+    zsh \
+    imagemagick
 
 # Install Python and pip
 echo "===> Installing Python and pip..."
