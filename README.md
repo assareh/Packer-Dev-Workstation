@@ -127,6 +127,9 @@ This VM is designed for running AI coding assistants that may execute arbitrary 
 - **Python Tools:** virtualenv, pylint, black, pytest, ipython
 - **Development:** build-essential (gcc, make, etc.)
 - **Claude AI:** Claude Code CLI
+- **Cloud CLIs:** AWS CLI, Azure CLI, Google Cloud SDK
+- **Infrastructure:** Terraform
+- **Networking:** Tailscale (run `sudo tailscale up` after boot to connect)
 - **VMware:** open-vm-tools for better integration
 
 ## Security Considerations

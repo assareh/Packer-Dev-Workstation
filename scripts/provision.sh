@@ -90,6 +90,10 @@ echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://
 sudo apt-get update
 sudo apt-get install -y terraform
 
+# Install Tailscale
+echo "===> Installing Tailscale..."
+curl -fsSL https://tailscale.com/install.sh | sh
+
 # Verify installations
 echo "===> Verifying installations..."
 git --version
@@ -102,6 +106,7 @@ aws --version
 az version --output table
 gcloud version
 terraform version
+tailscale version
 
 # Configure Git with sensible defaults
 echo "===> Configuring Git..."
