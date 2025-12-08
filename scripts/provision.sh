@@ -63,7 +63,10 @@ sudo npm install -g @openai/codex
 
 # Install Gemini CLI
 echo "===> Installing Gemini CLI..."
-sudo npm install -g google/gemini-cli
+# Configure git to use HTTPS instead of SSH for GitHub (needed for npm install from git)
+git config --global url."https://github.com/".insteadOf git@github.com:
+git config --global url."https://github.com/".insteadOf ssh://git@github.com/
+sudo npm install -g github:google/gemini-cli
 
 # Install AWS CLI v2
 echo "===> Installing AWS CLI..."
