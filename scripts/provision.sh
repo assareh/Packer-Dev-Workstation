@@ -193,6 +193,9 @@ bindkey '^[[B' history-search-forward
 alias ll='ls -la'
 alias la='ls -A'
 alias l='ls -CF'
+
+# Add Claude Code CLI to PATH
+export PATH="$HOME/.claude/local/bin:$PATH"
 ZSHRC_EOF
 
 sudo chown developer:developer /home/developer/.zshrc
