@@ -55,7 +55,22 @@ sudo apt-get install -y gh
 
 # Install Claude Code CLI
 echo "===> Installing Claude Code CLI..."
-curl -fsSL https://claude.ai/install.sh | bash
+set +e  # Temporarily disable exit on error
+set -x  # Enable verbose output
+curl -fsSL https://claude.ai/install.sh -o /tmp/claude-install.sh
+CURL_EXIT=$?
+echo "===> Claude Code installer download exit code: $CURL_EXIT"
+if [ $CURL_EXIT -eq 0 ]; then
+    bash /tmp/claude-install.sh
+    INSTALL_EXIT=$?
+    echo "===> Claude Code installer execution exit code: $INSTALL_EXIT"
+    rm -f /tmp/claude-install.sh
+else
+    echo "===> Failed to download Claude Code installer"
+fi
+set -e  # Re-enable exit on error
+set +x  # Disable verbose output
+echo "===> Claude Code installation step completed"
 
 # Install OpenAI Codex CLI
 echo "===> Installing OpenAI Codex CLI..."
@@ -63,10 +78,7 @@ sudo npm install -g @openai/codex
 
 # Install Gemini CLI
 echo "===> Installing Gemini CLI..."
-# Configure git to use HTTPS instead of SSH for GitHub (needed for npm install from git)
-git config --global url."https://github.com/".insteadOf git@github.com:
-git config --global url."https://github.com/".insteadOf ssh://git@github.com/
-sudo npm install -g github:google/gemini-cli
+sudo npm install -g @google/gemini-cli
 
 # Install AWS CLI v2
 echo "===> Installing AWS CLI..."
