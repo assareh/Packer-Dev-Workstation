@@ -4,6 +4,10 @@ packer {
       version = ">= 1.0.0"
       source  = "github.com/hashicorp/vmware"
     }
+    qemu = {
+      version = ">= 1.1.0"
+      source  = "github.com/hashicorp/qemu"
+    }
   }
 }
 
@@ -52,6 +56,29 @@ variable "ssh_public_key" {
   type        = string
   description = "SSH public key to add to authorized_keys"
   default     = ""
+}
+
+variable "builder" {
+  type        = string
+  description = "Which builder to use: 'vmware' for Mac mini/VMware Fusion, 'qemu' for Nomad/Linux host"
+  default     = "vmware"
+
+  validation {
+    condition     = contains(["vmware", "qemu"], var.builder)
+    error_message = "Builder must be 'vmware' or 'qemu'."
+  }
+}
+
+variable "qemu_accelerator" {
+  type        = string
+  description = "QEMU accelerator to use (kvm, hvf, tcg)"
+  default     = "kvm"
+}
+
+variable "qemu_output_format" {
+  type        = string
+  description = "Output format for QEMU builds (qcow2, raw)"
+  default     = "qcow2"
 }
 
 source "vmware-iso" "ubuntu" {
@@ -104,8 +131,63 @@ source "vmware-iso" "ubuntu" {
   format = "ova"
 }
 
+# QEMU source for Nomad/Linux hosts
+source "qemu" "ubuntu" {
+  vm_name       = var.vm_name
+
+  iso_url      = var.iso_url
+  iso_checksum = var.iso_checksum
+
+  ssh_username = var.ssh_username
+  ssh_password = var.ssh_password
+  ssh_timeout  = "30m"
+  ssh_handshake_attempts = 100
+
+  cpus      = var.cpus
+  memory    = var.memory
+  disk_size = "${var.disk_size}M"
+
+  accelerator = var.qemu_accelerator
+  format      = var.qemu_output_format
+
+  http_directory = "http"
+
+  boot_wait = "5s"
+  boot_command = [
+    "<esc><wait>",
+    "c<wait>",
+    "linux /casper/vmlinuz --- autoinstall ds='nocloud-net;s=http://{{.HTTPIP}}:{{.HTTPPort}}/'",
+    "<enter><wait>",
+    "initrd /casper/initrd",
+    "<enter><wait>",
+    "boot",
+    "<enter>"
+  ]
+
+  shutdown_command = "echo '${var.ssh_password}' | sudo -S shutdown -P now"
+
+  # Network configuration for QEMU
+  net_device     = "virtio-net"
+  disk_interface = "virtio"
+
+  # Headless mode for server builds
+  headless = true
+
+  # VNC for debugging if needed
+  vnc_bind_address = "0.0.0.0"
+  vnc_port_min     = 5900
+  vnc_port_max     = 5999
+
+  # QEMU binary (auto-detected on most systems)
+  qemu_binary = ""
+
+  # Output directory
+  output_directory = "output-${var.vm_name}-qemu"
+}
+
 build {
-  sources = ["source.vmware-iso.ubuntu"]
+  # Use dynamic source selection based on builder variable
+  sources = var.builder == "vmware" ? ["source.vmware-iso.ubuntu"] : ["source.qemu.ubuntu"]
 
   # Wait for cloud-init to finish
   provisioner "shell" {
@@ -125,13 +207,16 @@ build {
     ]
   }
 
-  # Install VMware Tools dependencies
+  # Install hypervisor-specific guest tools
   provisioner "shell" {
     environment_vars = [
       "DEBIAN_FRONTEND=noninteractive"
     ]
-    inline = [
+    inline = var.builder == "vmware" ? [
       "sudo apt-get install -y open-vm-tools"
+    ] : [
+      "sudo apt-get install -y qemu-guest-agent",
+      "sudo systemctl enable qemu-guest-agent"
     ]
   }
 

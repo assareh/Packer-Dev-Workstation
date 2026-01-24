@@ -7,6 +7,8 @@ output-*/
 *.vmx
 *.vmxf
 *.vmsd
+*.qcow2
+*.raw
 packer_cache/
 crash.log
 

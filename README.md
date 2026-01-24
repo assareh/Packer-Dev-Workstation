@@ -1,6 +1,10 @@
-# Disposable Development VM for VMware Fusion
+# Disposable Development VM
 
-This Packer configuration builds an Ubuntu 24.04 LTS OVA optimized as a disposable development virtual machine for VMware Fusion. The VM is designed to provide an isolated environment where you can run potentially flawed code without risking access to credentials and secrets on your primary machine.
+This Packer configuration builds an Ubuntu 24.04 LTS virtual machine optimized as a disposable development environment. The VM is designed to provide an isolated environment where you can run potentially flawed code without risking access to credentials and secrets on your primary machine.
+
+**Supports two deployment targets:**
+- **VMware Fusion** (Mac mini / macOS) - OVA format
+- **QEMU/KVM** (Nomad host / Linux) - QCOW2 format
 
 ## Features
 
@@ -8,17 +12,24 @@ This Packer configuration builds an Ubuntu 24.04 LTS OVA optimized as a disposab
 - Git pre-installed and configured
 - Python 3.12+ with pip and common development tools
 - Claude Code CLI pre-installed
-- VMware Tools for seamless integration with VMware Fusion
+- Hypervisor-specific guest tools (VMware Tools or QEMU Guest Agent)
 - SSH server configured for VS Code Remote SSH access
+- Tailscale for easy VPN/Tailnet connectivity
 - Optimized for development workloads
 - Clean, minimal footprint
 
 ## Prerequisites
 
 - [Packer](https://www.packer.io/downloads) (latest version recommended)
-- [VMware Fusion](https://www.vmware.com/products/fusion.html) on macOS
 - At least 500GB of free disk space for the build
 - Internet connection for downloading ISO and packages
+
+**For VMware Fusion (Mac mini):**
+- [VMware Fusion](https://www.vmware.com/products/fusion.html) on macOS
+
+**For QEMU/KVM (Nomad host / Linux):**
+- QEMU/KVM installed (`sudo apt install qemu-kvm libvirt-daemon-system`)
+- User in kvm group (`sudo usermod -aG kvm $USER`)
 
 ## Quick Start
 
@@ -29,16 +40,63 @@ This Packer configuration builds an Ubuntu 24.04 LTS OVA optimized as a disposab
    packer init .
    ```
 
-3. **Build the OVA:**
+3. **Build for your target platform:**
+
+   **Option A: VMware Fusion (Mac mini)**
    ```bash
    packer build ubuntu-dev.pkr.hcl
    ```
+   Then import the OVA from `output-ubuntu-dev-vm/` into VMware Fusion.
 
-4. **Import the OVA into VMware Fusion:**
-   - Open VMware Fusion
-   - Go to File > Import
-   - Select the generated OVA file (in the `output-ubuntu-dev-vm` directory)
+   **Option B: QEMU/KVM (Nomad host / Linux)**
+   ```bash
+   packer build -var 'builder=qemu' ubuntu-dev.pkr.hcl
+   ```
+   The QCOW2 image will be in `output-ubuntu-dev-vm-qemu/`.
+
+4. **Deploy the VM:**
+
+   **VMware Fusion:**
+   - Open VMware Fusion > File > Import
+   - Select the generated OVA file
    - Follow the import wizard
+
+   **QEMU (standalone):**
+   ```bash
+   ./scripts/run-qemu-vm.sh
+   ```
+
+   **Nomad cluster:**
+   ```bash
+   # First upload the QCOW2 to an accessible location, then:
+   nomad job run -var 'image_url=https://your-storage/ubuntu-dev-vm.qcow2' nomad/dev-workstation.nomad.hcl
+   ```
+
+## Recovery Scenarios
+
+This configuration supports two recovery targets for your development workstation:
+
+### Option 1: Mac mini with VMware Fusion
+- **Specs:** 12 cores, VMware Fusion installed
+- **Pros:** Native VMware support, easy OVA import
+- **Build:** `packer build ubuntu-dev.pkr.hcl`
+- **Deploy:** Import OVA into VMware Fusion
+
+### Option 2: Nomad Host with QEMU/KVM
+- **Specs:** 64GB RAM, 8 cores, 300 Mb fiber
+- **Pros:** Faster network, more RAM, orchestrated deployment
+- **Build:** `packer build -var 'builder=qemu' ubuntu-dev.pkr.hcl`
+- **Deploy:** Via Nomad job or standalone QEMU script
+
+### Tailscale Integration
+
+Both options include Tailscale pre-installed. After booting the VM:
+
+```bash
+sudo tailscale up
+```
+
+This connects the VM to your Tailnet for easy remote access regardless of which host runs it.
 
 ## Customization
 
@@ -54,6 +112,8 @@ Edit `variables.pkrvars.hcl` to change:
 - CPU count
 - Memory allocation
 - Disk size
+- Builder type (`vmware` or `qemu`)
+- QEMU accelerator (`kvm`, `hvf`, or `tcg`)
 
 Then build with your custom variables:
 
@@ -122,15 +182,16 @@ This VM is designed for running AI coding assistants that may execute arbitrary 
 ## Installed Software
 
 - **Base:** Ubuntu 24.04 LTS Server
-- **Version Control:** Git
+- **Version Control:** Git, GitHub CLI
 - **Python:** Python 3.12+ with pip
 - **Python Tools:** virtualenv, pylint, black, pytest, ipython
+- **Node.js:** LTS version with npm
 - **Development:** build-essential (gcc, make, etc.)
-- **Claude AI:** Claude Code CLI
+- **AI Assistants:** Claude Code CLI, OpenAI Codex CLI, Google Gemini CLI
 - **Cloud CLIs:** AWS CLI, Azure CLI, Google Cloud SDK
 - **Infrastructure:** Terraform
 - **Networking:** Tailscale (run `sudo tailscale up` after boot to connect)
-- **VMware:** open-vm-tools for better integration
+- **Guest Tools:** open-vm-tools (VMware) or qemu-guest-agent (QEMU)
 
 ## Security Considerations
 
@@ -160,10 +221,14 @@ The Packer build process:
 
 1. Downloads Ubuntu 24.04 LTS ISO
 2. Boots the ISO and automates installation using cloud-init
-3. Installs base system and VMware tools
-4. Runs provisioning scripts to install Git, Python, and Claude Code
+3. Installs base system and hypervisor-specific guest tools
+4. Runs provisioning scripts to install development tools
 5. Cleans up temporary files and logs
-6. Exports as an OVA file
+6. Exports as OVA (VMware) or QCOW2 (QEMU)
+
+**Output locations:**
+- VMware: `output-ubuntu-dev-vm/ubuntu-dev-vm.ova`
+- QEMU: `output-ubuntu-dev-vm-qemu/ubuntu-dev-vm`
 
 Total build time: ~20-30 minutes (depending on internet speed and host performance)
 
