@@ -144,25 +144,6 @@ job "dev-workstation" {
         TAILSCALE_AUTH_KEY = var.tailscale_auth_key
       }
 
-      # Service registration for Consul
-      service {
-        name = "dev-workstation"
-        port = "ssh"
-
-        tags = [
-          "dev",
-          "workstation",
-          "ssh"
-        ]
-
-        check {
-          type     = "tcp"
-          port     = "ssh"
-          interval = "30s"
-          timeout  = "5s"
-        }
-      }
-
       # Logs
       logs {
         max_files     = 5
