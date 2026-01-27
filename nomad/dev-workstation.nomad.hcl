@@ -3,22 +3,15 @@
 #
 # Prerequisites:
 # 1. Build the QEMU image: packer build -var 'builder=qemu' ubuntu-dev.pkr.hcl
-# 2. Upload the qcow2 image to an accessible location (HTTP server, S3, etc.)
-# 3. Update the artifact source below with your image URL
+# 2. Copy the image to /opt/nomad/qemu-images/ on the target node
 #
 # Usage:
 #   nomad job run nomad/dev-workstation.nomad.hcl
 
-variable "image_url" {
-  description = "URL to the QCOW2 image built by Packer"
+variable "image_name" {
+  description = "Name of the QCOW2 image in /opt/nomad/qemu-images/"
   type        = string
-  default     = ""
-}
-
-variable "image_checksum" {
-  description = "SHA256 checksum of the QCOW2 image"
-  type        = string
-  default     = ""
+  default     = "ubuntu-dev-vm.qcow2"
 }
 
 variable "tailscale_auth_key" {
@@ -31,10 +24,10 @@ job "dev-workstation" {
   datacenters = ["dc1"]
   type        = "service"
 
-  # Spread constraint - don't co-locate with other dev VMs
+  # Run on NUC where the image is stored
   constraint {
-    operator  = "distinct_hosts"
-    value     = "true"
+    attribute = "${attr.unique.hostname}"
+    value     = "nuc"
   }
 
   group "vm" {
@@ -81,48 +74,26 @@ job "dev-workstation" {
       # Resource requirements - adjust based on your Nomad host
       resources {
         cpu    = 8000   # 8 CPU cores (in MHz, adjust for your host)
-        memory = 32768  # 32GB RAM
-
-        # Alternative: use memory_max for overcommit
-        # memory     = 16384
-        # memory_max = 65536
+        memory = 16384  # 16GB RAM
       }
 
       # QEMU configuration
       config {
-        # Image source - downloaded at task start
-        image_path = "local/ubuntu-dev-vm.qcow2"
+        # Image source - full path to image
+        image_path = "/opt/nomad/qemu-images/${var.image_name}"
 
         # VM hardware configuration
         accelerator = "kvm"
 
-        # Port forwarding handled by network stanza
-        port_map {
-          ssh = 22
-          vnc = 5900
-        }
-
-        # Additional QEMU arguments for better performance
+        # Additional QEMU arguments
         args = [
           "-cpu", "host",
           "-smp", "8,sockets=1,cores=8,threads=1",
-          "-m", "32768",
+          "-m", "16384",
           "-enable-kvm",
-          "-device", "virtio-net-pci,netdev=net0",
-          "-netdev", "user,id=net0,hostfwd=tcp::${NOMAD_PORT_ssh}-:22",
-          "-vnc", ":0",
-          "-daemonize"
+          "-netdev", "user,id=user.0,hostfwd=tcp::2222-:22",
+          "-device", "virtio-net,netdev=user.0"
         ]
-      }
-
-      # Download the QCOW2 image artifact
-      artifact {
-        source      = var.image_url
-        destination = "local/"
-
-        options {
-          checksum = var.image_checksum != "" ? "sha256:${var.image_checksum}" : ""
-        }
       }
 
       # Template for Tailscale setup script (injected via cloud-init)
@@ -154,9 +125,10 @@ job "dev-workstation" {
 
   # Update strategy - careful with VMs
   update {
-    max_parallel     = 1
-    min_healthy_time = "60s"
-    healthy_deadline = "10m"
-    auto_revert      = true
+    max_parallel      = 1
+    min_healthy_time  = "60s"
+    healthy_deadline  = "10m"
+    progress_deadline = "15m"
+    auto_revert       = true
   }
 }

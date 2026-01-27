@@ -168,7 +168,7 @@ source "qemu" "ubuntu" {
 
   # Network configuration for QEMU
   net_device     = "virtio-net"
-  disk_interface = "virtio"
+  disk_interface = "ide"  # Use ide for Nomad QEMU driver compatibility
 
   # Headless mode for server builds
   headless = true
